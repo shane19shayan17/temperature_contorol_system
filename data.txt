@@ -1,0 +1,7 @@
+Time: 0 | T__in: 20 | T optimal: 25 | DT_wall: 0.1 | DT_window: 0.55 | DT_cooler,heater0.4 | air conditioner: heater
+Time: 1 | T__in: 21.05 | T optimal: 25 | DT_wall: 0.093 | DT_window: 0.511 | DT_cooler,heater0.4 | air conditioner: heater
+Time: 2 | T__in: 22.054 | T optimal: 25 | DT_wall: 0.086 | DT_window: 0.475 | DT_cooler,heater0.4 | air conditioner: heater
+Time: 3 | T__in: 23.015 | T optimal: 25 | DT_wall: 0.08 | DT_window: 0.44 | DT_cooler,heater0.4 | air conditioner: heater
+Time: 4 | T__in: 23.935 | T optimal: 25 | DT_wall: 0.074 | DT_window: 0.405 | DT_cooler,heater0.4 | air conditioner: heater
+Time: 5 | T__in: 24.814 | T optimal: 25 | DT_wall: 0.068 | DT_window: 0.374 | DT_cooler,heater0 | air conditioner: off
+Time: 6 | T__in: 25.256 | T optimal: 25 | DT_wall: 0.065 | DT_window: 0.357 | DT_cooler,heater-0.4 | air conditioner: cooler
