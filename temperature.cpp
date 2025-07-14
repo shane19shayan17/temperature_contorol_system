@@ -9,6 +9,31 @@ string state__1, state__2;
 double optimal, inside, outside, delta__t;
 void menu();
 
+// class for PID and set final power 
+class PID
+{
+private:
+    const float ki = 1.5, kp = 400, kd = 20; //=> it depends to PID and heater or cooler
+
+public:
+    double calculate(double error, double prev_error, double integral, double dt)
+    {
+        double d = (error - prev_error) / dt;
+        double output = (error * kp) + (integral * ki) + (d * kd); // PID formula
+
+        if (output > 8000) //=> beacuase the max power is +-8000
+        {
+            output = 8000;
+        }
+        if (output < -8000)
+        {
+            output = -8000;
+        }
+
+        return output;
+    }
+};
+
 ofstream dataTable("data.txt");
 
 // for 2 digit float
@@ -47,24 +72,6 @@ public:
         }
 
         return roundTwoDigits(((out - in) / R__window) * dt);
-    }
-};
-
-class airConditioner
-{
-public:
-    double D__T__airCondiotioner(double dt, string condition)
-    {
-        double p = 0.4; //=> 8,000 /20,000
-        if (condition == "cooler")
-        {
-            p *= -1;
-        }
-        else if (condition == "off")
-        {
-            p = 0;
-        }
-        return roundTwoDigits(p * dt);
     }
 };
 
@@ -117,41 +124,53 @@ string setAirCondition(double opt, double in)
 void printData(double time, double in, double opt, double wall, double window, double ch, string airCondition)
 {
     cout << "Time: " << "\t" << "T__in: " << "\t" << "T optimal: " << "\t" << "DT_wall: " << "\t" << "DT_window: " << "\t" << "DT_cooler,heater" << "\t" << "air conditioner: " << endl;
-    cout << time << "\t" << in << "\t" << opt << "\t" << "\t" << wall << "\t" << "\t" << window  << "\t" << "\t" << ch << "\t" << "\t" << "\t" << airCondition << endl;
+    cout << time << "\t" << in << "\t" << opt << "\t" << "\t" << wall << "\t" << "\t" << window << "\t" << "\t" << ch << "\t" << "\t" << "\t" << airCondition << endl;
 
-    dataTable << "Time: " <<time<< " | " << "T__in: " <<in<< " | " << "T optimal: " <<opt<< " | " << "DT_wall: "<<wall << " | " << "DT_window: "<<window << " | " << "DT_cooler,heater" <<ch<< " | " << "air conditioner: " <<airCondition<< endl;
+    dataTable << "Time: " << time << " | " << "T__in: " << in << " | " << "T optimal: " << opt << " | " << "DT_wall: " << wall << " | " << "DT_window: " << window << " | " << "DT_cooler,heater" << ch << " | " << "air conditioner: " << airCondition << endl;
 }
 
+// main function for simulation
 void simulation()
 {
     Room r;
     Window w;
-    airConditioner a;
+    PID pid;
 
     string isStop;
-    double time = 0;
+    double time = 0, p, error, prev_error = optimal - inside, integral = 0;
 
     while (isStop != "exit")
     {
-        string airCondition = setAirCondition(optimal, inside);
+        error = optimal - inside; // => calculate error for PID
+        integral += error * delta__t;
 
-        double DT_wall = r.D__T__wall(outside, inside, delta__t);
+        p = pid.calculate(error, prev_error, integral, delta__t); //=> calculate power with PID system
+
+        string airCondition = setAirCondition(optimal, inside); // => set air condition
+        if (airCondition == "off")                              //=> if heater or cooler should be off
+        {
+            p = 0;
+        }
+
+        double DT_wall = r.D__T__wall(outside, inside, delta__t); //=> delta t of wall , window , and air conditioner
         double DT_window_1 = w.D__T__window(outside, inside, delta__t, state__1);
         double DT_window_2 = w.D__T__window(outside, inside, delta__t, state__2);
-        double DT_ch = a.D__T__airCondiotioner(delta__t, airCondition);
+        double DT_ch = p / 20000 * delta__t;
 
-        double result = DT_wall + DT_window_1 + DT_window_2 + DT_ch;
+        double result = DT_wall + DT_window_1 + DT_window_2 + DT_ch; //=> final calculate for temperature
 
-        printData(time, inside, optimal, DT_wall, DT_window_1+ DT_window_2, DT_ch, airCondition);
+        printData(time, inside, optimal, DT_wall, DT_window_1 + DT_window_2, DT_ch, airCondition); //=> print all data in terminal
 
         time += delta__t;
         inside += result;
+        prev_error = error; //=> set  previous error
 
         cin >> isStop;
     }
     menu();
 }
 
+// body of program
 void menu()
 {
     cout << "Room Temperature Simulation and Contorol Program" << endl;
@@ -200,6 +219,7 @@ void menu()
 int main()
 {
     menu();
+    dataTable.close();
 
     return 0;
 }
